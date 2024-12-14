@@ -1,0 +1,30 @@
+.services-container {
+    padding: 2rem;
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.service-section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .services-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+    
+    .service-section {
+        padding: 1.5rem;
+    }
+}

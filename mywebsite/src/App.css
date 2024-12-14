@@ -1,0 +1,95 @@
+:root {
+  /* Primary Purple Palette */
+  --primary-dark: #76476d;    /* Dark purple for headers and main elements */
+  --primary-main: #8b5983;    /* Main purple for navigation */
+  --primary-light: #a06b98;   /* Light purple for hover states */
+  --primary-lighter: #d4b7ce; /* Very light purple for backgrounds */
+  
+  /* Accent Colors */
+  --accent-blue: #4285f4;     /* For active states and primary buttons */
+  --accent-green: #4caf50;    /* For success/edit actions */
+  --accent-red: #dc3545;      /* For delete/warning actions */
+  --accent-teal: #45b3b3;     /* For secondary actions like "Add Pet" */
+  
+  /* Neutral Colors */
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --background-light: #f8f5f9;
+  --white: #ffffff;
+}
+
+.App {
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background-light);
+  color: var(--text-primary);
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  background-color: #f5f5f5;
+}
+
+.section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.section h1 {
+  color: var(--primary-dark);
+  margin-bottom: 1rem;
+}
+
+.section h2 {
+  color: var(--primary-dark);
+  margin-bottom: 1rem;
+}
+
+.section p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

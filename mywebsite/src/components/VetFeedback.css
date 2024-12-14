@@ -1,0 +1,86 @@
+.feedback-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.feedback-container h2 {
+    color: #76476d;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.feedback-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.rating-select, .comment-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.rating-select label, .comment-area label {
+    font-weight: bold;
+    color: #333;
+}
+
+.rating-select select {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.comment-area textarea {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-height: 150px;
+    font-size: 1rem;
+    resize: vertical;
+}
+
+.feedback-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 1rem;
+}
+
+.submit-btn, .cancel-btn {
+    padding: 0.8rem 2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.submit-btn {
+    background-color: #633d5c;
+    color: white;
+}
+
+.submit-btn:hover {
+    background-color: #76476d;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #5a6268;
+}
+
+.submit-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

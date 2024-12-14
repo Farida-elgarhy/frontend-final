@@ -1,0 +1,121 @@
+.footer {
+    background-color: rgb(118, 71, 109);
+    color: white;
+    padding: 3rem 2rem 1rem;
+    margin-top: auto;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+}
+
+.footer-brand {
+    display: flex;
+    align-items: flex-start;
+}
+
+.footer-brand a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.footer-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+.footer-icon {
+    font-size: 1.8rem;
+    color: white;
+}
+
+.footer-links {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.footer-section h3 {
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: color 0.2s;
+    font-size: 0.95rem;
+}
+
+.footer-section ul li a:hover {
+    color: white;
+}
+
+.footer-section ul li .disabled-link {
+    color: rgba(255, 255, 255, 0.5);
+    cursor: not-allowed;
+}
+
+.footer-bottom {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-bottom p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+    }
+
+    .footer-links {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .footer-brand {
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        padding: 2rem 1rem 1rem;
+    }
+
+    .footer-links {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .footer-section {
+        text-align: center;
+    }
+}
