@@ -84,69 +84,39 @@ const VetsList = () => {
                 throw new Error('Invalid vet ID');
             }
 
-            // Format date to match backend expectations (YYYY-MM-DD)
-            const formattedDate = new Date(date).toISOString().split('T')[0];
+            const url = `http://localhost:8888/vets/${numericVetId}/available-slots?date=${date}`;
+            console.log('Fetching slots:', { numericVetId, date, url });
             
-            // Check if user is logged in first
-            const authResponse = await fetch('http://localhost:8888/user/check-auth', {
-                credentials: 'include'
-            });
-            
-            if (!authResponse.ok) {
-                throw new Error('Please log in to view available slots');
-            }
-
-            // Now fetch the slots
-            const url = `http://localhost:8888/vets/${numericVetId}/available-slots`;
-            const queryParams = new URLSearchParams({
-                date: formattedDate
-            });
-            
-            const fullUrl = `${url}?${queryParams.toString()}`;
-            console.log('Fetching slots:', { numericVetId, formattedDate, fullUrl });
-            
-            const response = await fetch(fullUrl, {
+            const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Please log in to view available slots');
-                }
-                if (response.status === 404) {
-                    throw new Error('No slots available for this date');
-                }
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Failed to fetch slots (${response.status})`);
-            }
-
             const data = await response.json();
             console.log('Slots response:', data);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    throw new Error('Please log in to view available slots');
+                }
+                throw new Error(data.message || `Failed to fetch slots (${response.status})`);
+            }
 
             if (!data.success) {
                 throw new Error(data.message || 'No slots available');
             }
 
-            // Ensure we have an array of slots
-            const slots = Array.isArray(data.availableSlots) ? data.availableSlots : [];
-            console.log('Available slots:', slots);
-            setAvailableSlots(slots);
+            setAvailableSlots(data.availableSlots || []);
             setError('');
             
         } catch (err) {
             console.error('Error fetching slots:', err);
             setError(err.message);
             setAvailableSlots([]);
-            // If not authenticated, you might want to redirect to login
-            if (err.message.includes('log in')) {
-                // You can handle this by showing a login prompt or redirecting
-                window.location.href = '/login';
-            }
         }
     };
 
@@ -157,15 +127,6 @@ const VetsList = () => {
         }
 
         try {
-            // Check authentication first
-            const authResponse = await fetch('http://localhost:8888/user/check-auth', {
-                credentials: 'include'
-            });
-            
-            if (!authResponse.ok) {
-                throw new Error('Please log in to book an appointment');
-            }
-
             setIsLoading(true);
             setError('');
             
@@ -188,16 +149,16 @@ const VetsList = () => {
                 body: JSON.stringify(appointmentData)
             });
 
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Please log in to book an appointment');
-                }
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Booking failed (${response.status})`);
-            }
-
             const data = await response.json();
             console.log('Booking response:', data);
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = '/login';
+                    throw new Error('Please log in to book an appointment');
+                }
+                throw new Error(data.message || `Booking failed (${response.status})`);
+            }
 
             if (!data.success) {
                 throw new Error(data.message || 'Failed to book appointment');
@@ -211,10 +172,6 @@ const VetsList = () => {
         } catch (err) {
             console.error('Booking error:', err);
             setError(err.message);
-            // If not authenticated, redirect to login
-            if (err.message.includes('log in')) {
-                window.location.href = '/login';
-            }
         } finally {
             setIsLoading(false);
         }
@@ -260,22 +217,37 @@ const VetsList = () => {
             setError('');
             const response = await fetch(`http://localhost:8888/vets/${selectedVet.id}/feedback`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(feedback),
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    vetId: selectedVet.id,
+                    rating: feedback.rating,
+                    comment: feedback.comment
+                }),
                 credentials: 'include'
             });
 
+            const data = await response.json();
+            console.log('Feedback response:', data);
+
             if (!response.ok) {
                 if (response.status === 401) {
+                    window.location.href = '/login';
                     throw new Error('Please log in to submit feedback');
                 }
-                throw new Error('Failed to submit feedback');
+                throw new Error(data.message || 'Failed to submit feedback');
             }
-            const data = await response.json();
-            alert(data.message || 'Feedback submitted successfully!');
+
+            alert('Feedback submitted successfully!');
             setShowFeedbackForm(false);
             setFeedback({ rating: 5, comment: '' });
+            
+            // Refresh to show updated rating
+            window.location.reload();
         } catch (err) {
+            console.error('Feedback error:', err);
             setError(err.message || 'Failed to submit feedback');
         } finally {
             setIsLoading(false);
