@@ -18,22 +18,26 @@ const VetFeedback = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify({
                     vetId,
                     ...feedback
                 }),
             });
 
-            if (response.ok) {
+            const data = await response.json();
+            
+            if (response.ok && data.success) {
                 alert('Feedback submitted successfully!');
                 navigate('/vets');
             } else {
-                throw new Error('Failed to submit feedback');
+                throw new Error(data.message || 'Failed to submit feedback');
             }
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            alert('Failed to submit feedback. Please try again.');
+            alert(error.message || 'Failed to submit feedback. Please try again.');
         } finally {
             setIsLoading(false);
         }

@@ -32,7 +32,7 @@ function App() {
 
     const checkAuthStatus = async () => {
         try {
-            const response = await fetch('http://localhost:8888/user/pets', {
+            const response = await fetch('http://localhost:8888/user/check-auth', {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
@@ -42,10 +42,14 @@ function App() {
             });
             
             if (response.ok) {
-                const userData = await response.json();
-                setIsAuthenticated(true);
-                setUserData(userData);
-                setUserType(userData.type || '');
+                const data = await response.json();
+                if (data.success) {
+                    setIsAuthenticated(true);
+                    setUserData(data.user);
+                    setUserType(data.user.type || '');
+                } else {
+                    throw new Error(data.message || 'Authentication failed');
+                }
             } else {
                 throw new Error('Not authenticated');
             }
@@ -62,7 +66,8 @@ function App() {
     const handleLogin = (user) => {
         setIsAuthenticated(true);
         setUserData(user);
-        setUserType(user.isAdmin ? 'admin' : 'user');
+        setUserType(user.type || '');
+        checkAuthStatus(); // Refresh auth status after login
     };
 
     const handleLogout = async () => {

@@ -17,6 +17,38 @@ const VetsList = () => {
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
+        const fetchVets = async () => {
+            try {
+                setIsLoading(true);
+                setError('');
+                const response = await fetch('http://localhost:8888/vets', {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Please log in to view veterinarians');
+                    }
+                    throw new Error('Failed to fetch veterinarians');
+                }
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to fetch veterinarians');
+                }
+
+                setVets(data.vets || []);
+            } catch (err) {
+                console.error('Error fetching vets:', err);
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
         fetchVets();
     }, []);
 
@@ -41,134 +73,184 @@ const VetsList = () => {
         filterVets();
     }, [filterVets]);
 
-    const fetchVets = async () => {
-        try {
-            setIsLoading(true);
-            setError('');
-            const response = await fetch('http://localhost:8888/vets', {
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error('Please log in to view veterinarians');
-                }
-                throw new Error('Failed to fetch vets');
-            }
-
-            const data = await response.json();
-            if (!data.success) {
-                throw new Error(data.message || 'Failed to fetch vets');
-            }
-
-            setVets(data.vets || []);
-            setFilteredVets(data.vets || []);
-        } catch (err) {
-            console.error('Error fetching vets:', err);
-            setError(err.message || 'Failed to load vets');
-            setVets([]);
-            setFilteredVets([]);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
     const getAvailableSlots = async (vetId, date) => {
         try {
-            const dateParam = date ? `?date=${date}` : '';
-            const response = await fetch(`http://localhost:8888/vets/${vetId}/available-slots${dateParam}`, {
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json'
-                }
+            if (!date) {
+                throw new Error('Date parameter is required');
+            }
+
+            const numericVetId = parseInt(vetId, 10);
+            if (isNaN(numericVetId)) {
+                throw new Error('Invalid vet ID');
+            }
+
+            // Format date to match backend expectations (YYYY-MM-DD)
+            const formattedDate = new Date(date).toISOString().split('T')[0];
+            
+            // Check if user is logged in first
+            const authResponse = await fetch('http://localhost:8888/user/check-auth', {
+                credentials: 'include'
             });
             
+            if (!authResponse.ok) {
+                throw new Error('Please log in to view available slots');
+            }
+
+            // Now fetch the slots
+            const url = `http://localhost:8888/vets/${numericVetId}/available-slots`;
+            const queryParams = new URLSearchParams({
+                date: formattedDate
+            });
+            
+            const fullUrl = `${url}?${queryParams.toString()}`;
+            console.log('Fetching slots:', { numericVetId, formattedDate, fullUrl });
+            
+            const response = await fetch(fullUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
             if (!response.ok) {
                 if (response.status === 401) {
                     throw new Error('Please log in to view available slots');
                 }
-                throw new Error('Failed to fetch available slots');
+                if (response.status === 404) {
+                    throw new Error('No slots available for this date');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to fetch slots (${response.status})`);
             }
 
             const data = await response.json();
+            console.log('Slots response:', data);
+
             if (!data.success) {
-                throw new Error(data.message || 'Failed to get available slots');
+                throw new Error(data.message || 'No slots available');
             }
+
+            // Ensure we have an array of slots
+            const slots = Array.isArray(data.availableSlots) ? data.availableSlots : [];
+            console.log('Available slots:', slots);
+            setAvailableSlots(slots);
+            setError('');
             
-            setAvailableSlots(data.availableSlots || []);
         } catch (err) {
+            console.error('Error fetching slots:', err);
             setError(err.message);
             setAvailableSlots([]);
+            // If not authenticated, you might want to redirect to login
+            if (err.message.includes('log in')) {
+                // You can handle this by showing a login prompt or redirecting
+                window.location.href = '/login';
+            }
+        }
+    };
+
+    const handleBookAppointment = async () => {
+        if (!selectedSlot || !selectedDate || !selectedVet) {
+            setError('Please select a date and time slot');
+            return;
+        }
+
+        try {
+            // Check authentication first
+            const authResponse = await fetch('http://localhost:8888/user/check-auth', {
+                credentials: 'include'
+            });
+            
+            if (!authResponse.ok) {
+                throw new Error('Please log in to book an appointment');
+            }
+
+            setIsLoading(true);
+            setError('');
+            
+            const appointmentData = {
+                vetid: parseInt(selectedVet.id, 10),
+                appointmentdate: selectedDate,
+                appointmenttime: selectedSlot,
+                status: 'scheduled'
+            };
+            
+            console.log('Booking appointment:', appointmentData);
+            
+            const response = await fetch('http://localhost:8888/appointments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(appointmentData)
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error('Please log in to book an appointment');
+                }
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Booking failed (${response.status})`);
+            }
+
+            const data = await response.json();
+            console.log('Booking response:', data);
+
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to book appointment');
+            }
+
+            alert('Appointment booked successfully!');
+            setSelectedSlot('');
+            // Refresh available slots
+            await getAvailableSlots(selectedVet.id, selectedDate);
+            
+        } catch (err) {
+            console.error('Booking error:', err);
+            setError(err.message);
+            // If not authenticated, redirect to login
+            if (err.message.includes('log in')) {
+                window.location.href = '/login';
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleVetSelection = async (vet) => {
         try {
+            console.log('Selected vet:', vet);
             setIsLoading(true);
             setError('');
             setSelectedVet(vet);
             
-            // Get today's available slots by default
-            await getAvailableSlots(vet.id);
+            const today = new Date().toISOString().split('T')[0];
+            setSelectedDate(today);
             
+            await getAvailableSlots(vet.id, today);
         } catch (err) {
+            console.error('Error in selection:', err);
             setError(err.message);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleDateChange = async (date) => {
-        setSelectedDate(date);
+    const handleDateChange = async (e) => {
+        const selectedDate = e.target.value;
+        console.log('Date selected:', selectedDate);
+        setSelectedDate(selectedDate);
+        
         if (selectedVet) {
-            await getAvailableSlots(selectedVet.id, date);
-        }
-    };
-
-    const handleBookAppointment = async () => {
-        if (!selectedSlot) {
-            setError('Please select a time slot');
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            setError('');
-            
-            const response = await fetch(`http://localhost:8888/vets/${selectedVet.id}/appointments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    appointmentdate: selectedDate,
-                    appointmenttime: selectedSlot
-                }),
-                credentials: 'include'
-            });
-
-            const data = await response.json();
-            
-            if (!response.ok || !data.success) {
-                throw new Error(data.message || 'Booking failed');
+            try {
+                await getAvailableSlots(selectedVet.id, selectedDate);
+            } catch (err) {
+                console.error('Error changing date:', err);
+                setError(err.message);
             }
-
-            alert('Appointment booked successfully!');
-            
-            // Refresh available slots and clear selection
-            await getAvailableSlots(selectedVet.id, selectedDate);
-            setSelectedSlot('');
-            
-            // Remove the booked slot from availableSlots
-            setAvailableSlots(prevSlots => prevSlots.filter(slot => slot !== selectedSlot));
-            
-            // Clear the slot selection
-            setSelectedSlot('');
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -271,10 +353,7 @@ const VetsList = () => {
                         <input
                             type="date"
                             value={selectedDate}
-                            onChange={(e) => {
-                                setSelectedDate(e.target.value);
-                                handleDateChange(e.target.value);
-                            }}
+                            onChange={handleDateChange}
                             min={new Date().toISOString().split('T')[0]}
                         />
                     </div>
